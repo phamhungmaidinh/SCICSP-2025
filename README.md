@@ -52,8 +52,6 @@ repup/
 │
 └── docs/ # Documentation: API, design, guides
 
-markdown
-Copy code
 
 ---
 
