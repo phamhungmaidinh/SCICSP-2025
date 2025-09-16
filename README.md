@@ -81,30 +81,8 @@ repup/
 git clone https://github.com/<org>/repup.git
 cd repup
 ```
-2. Configure Environment
+### 2. Configure Environment
 Copy environment files and adjust secrets:
-```
-cp apps/backend/.env.example apps/backend/.env
-cp apps/mobile/.env.example apps/mobile/.env
-cp apps/ai-service/.env.example apps/ai-service/.env
-```
-3. Start Infrastructure (DB, Cache, etc.)
-```
-docker-compose up -d
-```
-4. Run Backend
-```
-cd apps/backend
-npm install
-npm run start:dev
-```
-5. Run AI Service
-```
-cd apps/ai-service
-pip install -r requirements.txt
-python inference.py --source webcam
-```
-6. Run Mobile App
 ```
 cd apps/mobile
 flutter pub get   # or yarn install (for React Native)
