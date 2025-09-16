@@ -1,0 +1,40 @@
+# Node
+node_modules/
+.npm/
+.pnpm-store/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+
+# Flutter / React Native
+.build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.dart_tool/
+build/
+android/.gradle/
+android/app/build/
+ios/Pods/
+ios/Runner.xcworkspace/
+*.xcuserstate
+*.xcuserdatad
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# Data / artifacts
+ml/data/**
+!ml/data/.gitkeep
+
+# Others
+coverage/
+dist/
