@@ -85,8 +85,8 @@ PostgreSQL & Redis
 Git
 
 1. Clone Repo
-git clone https://github.com/<org>/repup.git
-cd repup
+git clone https://github.com/phamhungmaidinh/SCICSP-2025.git
+cd SCICSP-2025
 
 2. Configure Environment
 
