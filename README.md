@@ -52,3 +52,64 @@ repup/
 ├── infra/             # Infrastructure: IaC, CI/CD, k8s deployment
 │
 └── docs/              # Documentation: API, design, guides
+```
+🛠 Tech Stack
+
+Mobile: Flutter / React Native
+
+Backend: Node.js (NestJS/Express) or Python (FastAPI/Django)
+
+Database: PostgreSQL, Redis
+
+Storage: AWS S3 / GCS + CDN
+
+AI: MediaPipe, MoveNet, OpenPose, TensorFlow, PyTorch
+
+Deployment: Docker, Kubernetes, AWS/GCP, Firebase
+
+Security: OAuth2, JWT, TLS
+
+⚡ Setup Instructions
+Prerequisites
+
+Node.js (v18+) & npm/yarn
+
+Python 3.9+
+
+Flutter SDK or React Native CLI
+
+Docker & Docker Compose
+
+PostgreSQL & Redis
+
+Git
+
+1. Clone Repo
+git clone https://github.com/<org>/repup.git
+cd repup
+
+2. Configure Environment
+
+Copy environment files and adjust secrets:
+
+cp apps/backend/.env.example apps/backend/.env
+cp apps/mobile/.env.example apps/mobile/.env
+cp apps/ai-service/.env.example apps/ai-service/.env
+
+3. Install & Run Mobile App
+cd apps/mobile
+flutter pub get   # or yarn install (for React Native)
+flutter run       # or npx react-native run-android / ios
+
+4. Start Backend
+cd apps/backend
+npm install
+npm run start:dev
+
+5. Start AI Service
+cd apps/ai-service
+pip install -r requirements.txt
+python inference.py --source webcam
+
+6. Start Infrastructure (Optional)
+docker-compose up -d
