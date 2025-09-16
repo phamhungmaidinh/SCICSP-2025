@@ -8,7 +8,6 @@ It helps users:
 - Automatically **count reps/sets**  
 - **Track progress** (weight, body metrics, performance)  
 - Join a **fitness community** with challenges, leaderboards, and trainers  
-anh tien oc cho
 ---
 
 ## ✨ Features
