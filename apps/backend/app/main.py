@@ -1,9 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 from datetime import datetime
 import os
 import platform
 import psutil
+from typing import Dict
+
+from .supabase_auth import SupabaseAuth, get_supabase_env, create_supabase_client
 
 app = FastAPI(
     title="RepUp Backend API", 
@@ -39,6 +42,31 @@ def get_uptime():
     hours, remainder = divmod(delta.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return f"{days}d {hours}h {minutes}m {seconds}s"
+
+
+# --- Supabase Integration ---
+@app.on_event("startup")
+async def _init_supabase():
+    env = get_supabase_env()
+    if env["SUPABASE_URL"]:
+        app.state.supabase_auth = SupabaseAuth(env["SUPABASE_URL"])
+    else:
+        app.state.supabase_auth = None
+    app.state.supabase = create_supabase_client()
+
+
+async def require_user(request: Request) -> Dict:
+    if not getattr(app.state, "supabase_auth", None):
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Supabase not configured")
+
+    header = request.headers.get("authorization", "")
+    if not header.lower().startswith("bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
+    token = header.split(" ", 1)[1]
+    try:
+        return await app.state.supabase_auth.verify(token)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 @app.get("/", response_model=Health)
 def root():
@@ -94,3 +122,20 @@ def healthcheck():
             "disk_used_percent": f"{(disk.used / disk.total) * 100:.1f}%"
         }
     )
+
+
+@app.get("/me")
+async def me(user: Dict = Depends(require_user)):
+    return {"user_id": user.get("sub"), "email": user.get("email"), "issuer": user.get("iss")}
+
+
+@app.get("/demo/todos")
+async def demo_todos():
+    """Demo: list rows from 'todos' table if Supabase is configured; otherwise return stub."""
+    if not getattr(app.state, "supabase", None):
+        return {"configured": False, "rows": []}
+    try:
+        resp = app.state.supabase.table("todos").select("*").limit(10).execute()
+        return {"configured": True, "rows": resp.data}
+    except Exception as e:
+        return {"configured": True, "error": str(e)}

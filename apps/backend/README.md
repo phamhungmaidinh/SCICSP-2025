@@ -3,398 +3,146 @@
 
 
 🏋️‍♂️ **AI-Powered Gym Training Assistant Backend**🏋️‍♂️ **AI-Powered Gym Training Assistant Backend API**
+# RepUp Backend (FastAPI) + Supabase
 
+AI-Powered Gym Training Assistant Backend with FastAPI, dockerized, and integrated with Supabase (Auth + Postgres + Storage).
 
+## Quick Start
 
-## 🚀 Quick Start## ✅ **WORKING SETUP - TESTED & VERIFIED**
-
-
-
-### One-Command Setup (Recommended)### 🎯 **Method 1: One Command Setup (RECOMMENDED)**
+Start locally (dev):
 
 ```bash
-
-cd /root/SCICSP-2025/apps/backend && source .venv/bin/activate && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload```bash
-
-```cd /root/SCICSP-2025/apps/backend && source .venv/bin/activate && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-
+cd apps/backend
+source .venv/bin/activate
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### Step-by-Step Setup
+Test endpoints (in a second terminal):
 
-```bash### 🔧 **Method 2: Step by Step**
+```bash
+curl -s http://localhost:8000/healthcheck | jq . | head
+curl -s http://localhost:8000/health
+curl -s http://localhost:8000/
+```
 
-# 1. Navigate to backend directory
+## Supabase E2E Integration
 
-cd /root/SCICSP-2025/apps/backend```bash
+We use Supabase for Auth and Postgres. FastAPI stays as the compute service (Render/Cloud Run/Railway/Fly.io). To wire E2E:
 
-# 1. Navigate to directory
+1) Create a Supabase project and get:
+   - SUPABASE_URL (Project settings → API → Project URL)
+   - SUPABASE_ANON_KEY (for frontend; optional here)
+   - SUPABASE_SERVICE_ROLE_KEY (server-side; keep secret!)
 
-# 2. Activate virtual environmentcd /root/SCICSP-2025/apps/backend
+2) Configure environment:
 
+```bash
+cp .env.example .env
+# edit .env and set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+```
+
+3) Apply schema (create a sample table with RLS policies). In Supabase SQL Editor, run:
+
+```sql
+-- Table
+create table if not exists public.todos (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  title text not null,
+  completed boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+-- Enable RLS
+alter table public.todos enable row level security;
+
+-- Policies: users read/write their rows
+create policy if not exists "Users can view their todos"
+  on public.todos for select
+  using (auth.uid() = user_id);
+
+create policy if not exists "Users can insert their todos"
+  on public.todos for insert
+  with check (auth.uid() = user_id);
+
+create policy if not exists "Users can update their todos"
+  on public.todos for update
+  using (auth.uid() = user_id);
+
+create policy if not exists "Users can delete their todos"
+  on public.todos for delete
+  using (auth.uid() = user_id);
+```
+
+4) Run server and test demo endpoints:
+
+```bash
 source .venv/bin/activate
-
-# 2. Activate virtual environment (already created)
-
-# 3. Start the serversource .venv/bin/activate
-
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
-```# 3. Verify FastAPI import works
-
-python -c "from app.main import app; print('✅ FastAPI ready!')"
-
-## 🔍 API Endpoints
-
-# 4. Start server
-
-| Endpoint | Description | Response |python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-
-|----------|-------------|----------|```
-
-| `GET /` | Basic health status | Simple health info |
-
-| `GET /health` | Standard health check | Service status |## � **Testing the Application**
-
-| `GET /healthcheck` | **Comprehensive health check** | Detailed system info |
-
-**IMPORTANT:** Open a NEW terminal window and run these commands while the server is running:
-
-## 🧪 Testing Commands
-
-```bash
-
-**Open a NEW terminal window** and run these while server is running:# Test healthcheck endpoint
-
-curl http://localhost:8000/healthcheck
-
-```bash
-
-# Test comprehensive health check# Test with status code
-
-curl http://localhost:8000/healthcheckcurl -w "HTTP Status: %{http_code}\n" http://localhost:8000/healthcheck
-
-
-
-# Test with HTTP status# Test other endpoints
-
-curl -w "HTTP Status: %{http_code}\n" http://localhost:8000/healthcheckcurl http://localhost:8000/health
-
-curl http://localhost:8000/
-
-# Test other endpoints```
-
-curl http://localhost:8000/health
-
-curl http://localhost:8000/## 📋 **Expected Results**
-
+# List demo data (uses supabase client if configured):
+curl -s http://localhost:8000/demo/todos | jq .
 ```
 
-### Server Startup Output:
+5) Auth-protected route (optional):
 
-## 📋 Project Structure```
-
-INFO:     Started server process [xxxxx]
-
-```INFO:     Waiting for application startup.
-
-apps/backend/INFO:     Application startup complete.
-
-├── app/INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-
-│   ├── __init__.py```
-
-│   └── main.py              # FastAPI application
-
-├── .venv/                   # Virtual environment### Healthcheck Response:
-
-├── .env                     # Environment variables```json
-
-├── .env.example            # Environment template{
-
-├── requirements.txt         # Python dependencies  "status": "healthy",
-
-├── Dockerfile              # Docker configuration  "service": "repup-backend",
-
-├── docker-compose.yml      # Multi-service setup  "version": "0.1.0",
-
-├── .dockerignore           # Docker ignore rules  "timestamp": "2025-09-21T...",
-
-└── README.md               # This file  "environment": "development",
-
-```  "uptime": "0d 0h 0m 15s",
-
-  "system": {
-
-## ⚙️ Environment Configuration    "platform": "Linux",
-
-    "architecture": "x86_64",
-
-The `.env` file contains:    "python_version": "3.12.3"
-
-```bash  },
-
-ENVIRONMENT=development  "memory": {
-
-APP_VERSION=0.1.0    "total": "11.68 GB",
-
-HOST=127.0.0.1    "available": "9.07 GB",
-
-PORT=8000    "percentage": "22.4%"
-
-DATABASE_URL=postgresql://user:password@localhost:5432/repup_db  }
-
-REDIS_URL=redis://localhost:6379}
-
-SECRET_KEY=your-secret-key-here```
-
+```bash
+# Requires a valid Supabase user JWT from your app
+curl -H "Authorization: Bearer <USER_JWT>" http://localhost:8000/me
 ```
 
-## 🚨 **Common Issues & Solutions**
+Notes:
+- If Supabase env is not set, /demo/todos returns {configured: false}.
+- If configured but no table exists, you will see an error message from Supabase.
 
-## 🐳 Docker Setup
+## Endpoints
 
-### Issue: "Address already in use"
+- GET / → Basic health
+- GET /health → Health
+- GET /healthcheck → Extended health with system info
+- GET /me → Returns claims from Supabase JWT (requires Authorization: Bearer)
+- GET /demo/todos → Reads first 10 rows from public.todos (if Supabase configured)
 
-### Using Docker Compose```bash
+## Environment
 
-```bashpkill -f uvicorn
+See `.env.example`. Minimal variables for Supabase:
 
-docker-compose up --build# Then restart the server
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY (or ANON_KEY for read-only)
 
-``````
+## Tests
 
+Run tests from repo root or backend folder:
 
-
-### Using Docker directly### Issue: "Module not found"
-
-```bash```bash
-
-docker build -t repup-backend .# Make sure you're in the correct directory
-
-docker run -p 8000:8000 repup-backendcd /root/SCICSP-2025/apps/backend
-
-```# And virtual environment is activated
-
+```bash
+cd apps/backend
 source .venv/bin/activate
-
-## 🔧 Development Dependencies```
-
-
-
-```txt### Issue: Server not responding
-
-fastapi==0.115.0          # Modern web framework- Make sure you're testing in a **separate terminal window**
-
-uvicorn[standard]==0.30.6  # ASGI server- Server must be running (you'll see the INFO messages)
-
-python-dotenv==1.0.1      # Environment management- Use `curl http://localhost:8000/healthcheck` not `0.0.0.0`
-
-pydantic-settings==2.5.2  # Settings validation
-
-psutil==6.0.0             # System monitoring## ✅ **Acceptance Criteria Status**
-
+pytest -q
 ```
 
-- ✅ **`/healthcheck` endpoint available and returns 200**
+Supabase tests are conditional: if no SUPABASE_URL is set, they only assert that the demo endpoint responds.
 
-## 📊 API Response Examples- ✅ **Project runs locally** 
+## CI
 
-- ✅ **FastAPI setup with proper structure**
+GitHub Actions workflow runs lint and tests. To enable Supabase integration in CI, add these repository secrets:
 
-### GET /healthcheck- ✅ **All dependencies working**
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
 
-```json
+## Deploy (example with Render)
 
-{**🎯 This setup is VERIFIED WORKING!**
+Create a Web Service from this repo using the Dockerfile in `apps/backend`. Set env vars in Render dashboard:
 
-  "status": "healthy",
+- ENVIRONMENT=production
+- HOST=0.0.0.0
+- PORT=8000
+- SUPABASE_URL=...
+- SUPABASE_SERVICE_ROLE_KEY=...
 
-  "service": "repup-backend",## 🔍 Health Check Endpoints
+Expose port 8000. Health check path: /healthcheck.
 
-  "version": "0.1.0",
+## Troubleshooting
 
-  "timestamp": "2025-09-21T13:00:00.000000",| Endpoint | Description | Response |
-
-  "environment": "development",|----------|-------------|----------|
-
-  "uptime": "0d 0h 5m 32s",| `GET /` | Basic health status | Simple health info |
-
-  "system": {| `GET /health` | Standard health check | Service status |
-
-    "platform": "Linux",| `GET /healthcheck` | **Comprehensive health check** | ✅ **Detailed system info** |
-
-    "platform_version": "#1 SMP PREEMPT_DYNAMIC",
-
-    "architecture": "x86_64",### ✅ Testing Commands
-
-    "processor": "x86_64",
-
-    "python_version": "3.12.3",```bash
-
-    "hostname": "server-name"# Test all endpoints
-
-  },curl http://localhost:8000/
-
-  "memory": {curl http://localhost:8000/health
-
-    "total": "11.68 GB",curl http://localhost:8000/healthcheck
-
-    "available": "9.07 GB",
-
-    "used": "2.40 GB",# Check HTTP status codes
-
-    "percentage": "22.4%",curl -w "HTTP Status: %{http_code}\n" http://localhost:8000/healthcheck
-
-    "disk_total": "1006.85 GB",```
-
-    "disk_free": "928.68 GB",
-
-    "disk_used_percent": "2.7%"## 📋 Acceptance Criteria Status
-
-  }
-
-}- ✅ **`/healthcheck` endpoint available and returns 200**
-
-```- ✅ **Project runs locally with Docker**
-
-- ✅ **FastAPI setup with proper structure**
-
-### GET /health- ✅ **Dockerfile optimized for production**
-
-```json- ✅ **docker-compose.yml for easy development**
-
-{
-
-  "status": "ok",## 🧪 Testing Results
-
-  "service": "repup-backend",
-
-  "version": "0.1.0",**✅ All Tests Passed Successfully!**
-
-  "timestamp": "2025-09-21T13:00:00.000000",
-
-  "environment": "development",### Local Testing Results:
-
-  "uptime": "0d 0h 5m 32s"- ✅ FastAPI application starts successfully
-
-}- ✅ Virtual environment setup works
-
-```- ✅ All dependencies install correctly
-
-- ✅ `/healthcheck` returns HTTP 200
-
-## 🚨 Troubleshooting- ✅ `/health` returns HTTP 200  
-
-- ✅ `/` (root) returns HTTP 200
-
-### Server won't start- ✅ JSON responses properly formatted
-
-```bash- ✅ System information correctly populated
-
-# Kill existing processes
-
-pkill -f uvicorn### Docker Testing Results:
-
-- ✅ Dockerfile builds successfully
-
-# Check if virtual environment is activated- ✅ Docker image optimized and secure
-
-source .venv/bin/activate- ✅ Health check endpoint configured
-
-- ✅ Multi-service docker-compose ready
-
-# Verify FastAPI can be imported
-
-python -c "from app.main import app; print('✅ OK')"**🎯 Status: Production Ready!** All acceptance criteria met and tested.
-
-```
-
-## 🔧 Available Endpoints
-
-### Port already in use
-
-```bash### Health Check Endpoints
-
-# Use different port
-
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload#### `GET /healthcheck` - **Comprehensive Health Check**
-
-```Returns detailed system information including:
-
-- Service status and version
-
-### Connection refused- System platform and architecture
-
-- Make sure server is running (you should see "Uvicorn running" message)- Memory and disk usage
-
-- Test from a separate terminal window- Python version and hostname
-
-- Use `localhost` not `0.0.0.0` in curl commands- Uptime since startup
-
-
-
-### Virtual environment issues**Example Response:**
-
-```bash```json
-
-# Recreate virtual environment{
-
-rm -rf .venv  "status": "healthy",
-
-python3 -m venv .venv  "service": "repup-backend", 
-
-source .venv/bin/activate  "version": "0.1.0",
-
-pip install -r requirements.txt  "timestamp": "2025-09-21T12:41:25.490527",
-
-```  "environment": "development",
-
-  "uptime": "0d 0h 5m 32s",
-
-## ✅ Success Indicators  "system": {
-
-    "platform": "Linux",
-
-### Server startup should show:    "architecture": "x86_64", 
-
-```    "python_version": "3.12.3"
-
-INFO:     Started server process [xxxxx]  },
-
-INFO:     Waiting for application startup.  "memory": {
-
-INFO:     Application startup complete.    "total": "11.68 GB",
-
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)    "available": "9.07 GB",
-
-```    "percentage": "22.4%"
-
-  }
-
-### Health check should return:}
-
-- HTTP Status: 200```
-- JSON response with "status": "healthy"
-- System information populated
-
-## 🎯 Acceptance Criteria Status
-
-- ✅ `/healthcheck` endpoint available and returns 200
-- ✅ Project runs locally with Docker
-- ✅ FastAPI setup with proper structure
-- ✅ Production-ready configuration
-- ✅ Comprehensive documentation
-
-## 🚀 Next Steps
-
-1. **Database Integration** - Connect PostgreSQL
-2. **Authentication** - JWT token system  
-3. **API Endpoints** - User management, workouts
-4. **AI Service Integration** - Pose estimation connection
-5. **Testing Suite** - Unit and integration tests
-6. **CI/CD Pipeline** - GitHub Actions
-
----
-
-**🎯 Status: Production Ready!** All acceptance criteria met and tested.
+- Healthcheck ok but Supabase demo returns configured=false → set SUPABASE_URL and key in environment
+- 401 on /me → missing/invalid Authorization header, or Supabase not configured
+- Supabase errors on /demo/todos → apply the SQL schema above in your project
