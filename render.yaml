@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: repup-backend
+    env: docker
+    plan: free
+    dockerfilePath: apps/backend/Dockerfile
+    autoDeploy: true
+    healthCheckPath: /healthcheck
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

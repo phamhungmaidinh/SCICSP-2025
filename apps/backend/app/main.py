@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import Body
 from pydantic import BaseModel
 from datetime import datetime
 import os
@@ -139,3 +140,24 @@ async def demo_todos():
         return {"configured": True, "rows": resp.data}
     except Exception as e:
         return {"configured": True, "error": str(e)}
+
+
+@app.post("/demo/todos")
+async def create_todo(
+    user: Dict = Depends(require_user),
+    title: str = Body(..., embed=True)
+):
+    if not getattr(app.state, "supabase", None):
+        raise HTTPException(status_code=503, detail="Supabase not configured")
+    user_id = user.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Missing sub in token")
+    try:
+        resp = app.state.supabase.table("todos").insert({
+            "user_id": user_id,
+            "title": title,
+            "completed": False,
+        }).execute()
+        return {"inserted": True, "row": (resp.data or [None])[0]}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -44,7 +44,9 @@ cp .env.example .env
 3) Apply schema (create a sample table with RLS policies). In Supabase SQL Editor, run:
 
 ```sql
--- Table
+-- Enable gen_random_uuid
+create extension if not exists "pgcrypto";
+
 create table if not exists public.todos (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null,
@@ -53,23 +55,26 @@ create table if not exists public.todos (
   created_at timestamptz not null default now()
 );
 
--- Enable RLS
 alter table public.todos enable row level security;
 
--- Policies: users read/write their rows
-create policy if not exists "Users can view their todos"
+-- Recreate policies (Postgres doesn't support IF NOT EXISTS for policies)
+drop policy if exists "Users can view their todos" on public.todos;
+create policy "Users can view their todos"
   on public.todos for select
   using (auth.uid() = user_id);
 
-create policy if not exists "Users can insert their todos"
+drop policy if exists "Users can insert their todos" on public.todos;
+create policy "Users can insert their todos"
   on public.todos for insert
   with check (auth.uid() = user_id);
 
-create policy if not exists "Users can update their todos"
+drop policy if exists "Users can update their todos" on public.todos;
+create policy "Users can update their todos"
   on public.todos for update
   using (auth.uid() = user_id);
 
-create policy if not exists "Users can delete their todos"
+drop policy if exists "Users can delete their todos" on public.todos;
+create policy "Users can delete their todos"
   on public.todos for delete
   using (auth.uid() = user_id);
 ```
@@ -84,11 +89,18 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 curl -s http://localhost:8000/demo/todos | jq .
 ```
 
-5) Auth-protected route (optional):
+5) Auth-protected routes:
 
 ```bash
 # Requires a valid Supabase user JWT from your app
 curl -H "Authorization: Bearer <USER_JWT>" http://localhost:8000/me
+
+# Create a todo for the current user
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <USER_JWT>" \
+  -d '{"title":"First todo"}' \
+  http://localhost:8000/demo/todos
 ```
 
 Notes:
