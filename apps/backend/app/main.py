@@ -8,6 +8,10 @@ import psutil
 from typing import Dict
 
 from .supabase_auth import SupabaseAuth, get_supabase_env, create_supabase_client
+from dotenv import load_dotenv
+
+# Load environment variables from .env when running locally
+load_dotenv()
 
 app = FastAPI(
     title="RepUp Backend API", 
