@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: repup-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - APP_VERSION=0.1.0
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      # Mount source code for development (hot reload)
+      - ./app:/app/app:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - repup-network
+
+  # PostgreSQL database (for future use)
+  postgres:
+    image: postgres:15-alpine
+    container_name: repup-postgres
+    environment:
+      POSTGRES_DB: repup_db
+      POSTGRES_USER: repup_user
+      POSTGRES_PASSWORD: repup_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - repup-network
+
+  # Redis cache (for future use)
+  redis:
+    image: redis:7-alpine
+    container_name: repup-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - repup-network
+
+volumes:
+  postgres_data:
+
+networks:
+  repup-network:
+    driver: bridge
